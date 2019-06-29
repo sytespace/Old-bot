@@ -1,0 +1,7 @@
+discord.py==0.16.12
+requests
+Praw
+pyspeedtest
+heroku3
+psycopg2-binary
+apscheduler
