@@ -22,6 +22,7 @@ import pyping
 
 url = "postgres://url" 
 
+adminRoles = [566249728732561410, 605456866775924746] # Engineer , Staff
 result = urlparse(url)
 username = result.username
 password = result.password
@@ -315,7 +316,7 @@ async def rulessetup(ctx):
 
 @bot.command(pass_context=True)
 async def weekly_reset(ctx):
-    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if [role.id for role in ctx.message.author.roles] in adminRoles:
         for x in ctx.message.server.members:
             uid = x.id
             reset_weeklymessages(uid)
@@ -347,7 +348,7 @@ async def pfp(ctx, member: discord.Member):
 
 @bot.command(pass_context=True)
 async def purge(ctx, number):
-    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if [role.id for role in ctx.message.author.roles] in adminRoles:
         ongoingpurge = True
         msgs = []
         number = int(number)
@@ -365,7 +366,7 @@ async def purge(ctx, number):
 
         # @bot.command(pass_context=True)
         # async def eme(ctx):
-        #     if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+        #     if [role.id for role in ctx.message.author.roles] in adminRoles:
         #         for channel in ctx.message.server.channels:
         #                 staff = discord.utils.get(ctx.message.author.server.roles, name="🔨 Staff")
         #                 verified = discord.utils.get(ctx.message.author.server.roles, name="👥 Verified")
@@ -386,7 +387,7 @@ async def purge(ctx, number):
 
         # @bot.command(pass_context=True)
         # async def unlock(ctx):
-        #     if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+        #     if [role.id for role in ctx.message.author.roles] in adminRoles:
         #         staff = discord.utils.get(ctx.message.author.server.roles, name="🔨 Staff")
         #         verified = discord.utils.get(ctx.message.author.server.roles, name="👥 Verified")
         #         everyone = ctx.message.author.server.default_role
@@ -407,7 +408,7 @@ async def purge(ctx, number):
 
 @bot.command(pass_context=True)
 async def checkuser(ctx, user: discord.Member=None):
-    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if [role.id for role in ctx.message.author.roles] in adminRoles:
         if user is None:
             user = ctx.message.author
         accage = datetime.utcnow() - user.created_at
@@ -527,7 +528,7 @@ async def buy(ctx, itemnumber: int = None):
 
 @bot.command(pass_context=True)
 async def punish(ctx, member: discord.Member = None, *, reason: str = None):
-    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if [role.id for role in ctx.message.author.roles] in adminRoles:
         if reason == None:
             await bot.say(":x: Please Specify A Reason")
         elif member == None:
@@ -672,7 +673,7 @@ async def skin(ctx, username = ""):
 
 @bot.command(pass_context=True)
 async def setup(ctx):
-    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if [role.id for role in ctx.message.author.roles] in adminRoles:
         print("Here!")
         #print("Set up!")
         msgs = []
@@ -707,7 +708,7 @@ async def weekly(ctx):
 
 @bot.command(pass_context=True)
 async def addguest(ctx):
-    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if [role.id for role in ctx.message.author.roles] in adminRoles:
         ecowarrior = discord.utils.get(ctx.message.server.roles, name="👋 Guest")
         for member in ctx.message.server.members:
             await bot.add_roles(member, ecowarrior)
@@ -717,7 +718,7 @@ async def addguest(ctx):
 
 @bot.command(pass_context=True)
 async def statmod(ctx, member: discord.Member = None, amount: int = None):
-    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if [role.id for role in ctx.message.author.roles] in adminRoles:
         embed = discord.Embed(title=f"What aspect of {member.display_name}'s stats do you wish to change?'", description="React with 📕 to change XP and 📙 to change Sytes and 📗 to toggle booster", color=embcolor)
         wchange = await bot.send_message(ctx.message.channel, embed=embed)
         await bot.add_reaction(wchange, '📕')
