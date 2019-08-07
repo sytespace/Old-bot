@@ -315,7 +315,7 @@ async def rulessetup(ctx):
 
 @bot.command(pass_context=True)
 async def weekly_reset(ctx):
-    if "605456866775924746" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         for x in ctx.message.server.members:
             uid = x.id
             reset_weeklymessages(uid)
@@ -347,7 +347,7 @@ async def pfp(ctx, member: discord.Member):
 
 @bot.command(pass_context=True)
 async def purge(ctx, number):
-    if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         ongoingpurge = True
         msgs = []
         number = int(number)
@@ -407,7 +407,7 @@ async def purge(ctx, number):
 
 @bot.command(pass_context=True)
 async def checkuser(ctx, user: discord.Member=None):
-    if "605456866775924746" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         if user is None:
             user = ctx.message.author
         accage = datetime.utcnow() - user.created_at
@@ -527,7 +527,7 @@ async def buy(ctx, itemnumber: int = None):
 
 @bot.command(pass_context=True)
 async def punish(ctx, member: discord.Member = None, *, reason: str = None):
-    if "605456866775924746" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         if reason == None:
             await bot.say(":x: Please Specify A Reason")
         elif member == None:
@@ -672,7 +672,7 @@ async def skin(ctx, username = ""):
 
 @bot.command(pass_context=True)
 async def setup(ctx):
-    if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         print("Here!")
         #print("Set up!")
         msgs = []
@@ -691,7 +691,7 @@ async def setup(ctx):
 
 @bot.command(pass_context=True)
 async def reboot(ctx):
-    if not (ctx.message.author.id == '279714095480176642'):
+    if not ctx.message.author.id == '279714095480176642':
         return await bot.say(":x: You **must** be the bot owner")
     await bot.logout()
 
@@ -707,7 +707,7 @@ async def weekly(ctx):
 
 @bot.command(pass_context=True)
 async def addguest(ctx):
-    if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         ecowarrior = discord.utils.get(ctx.message.server.roles, name="👋 Guest")
         for member in ctx.message.server.members:
             await bot.add_roles(member, ecowarrior)
@@ -717,7 +717,7 @@ async def addguest(ctx):
 
 @bot.command(pass_context=True)
 async def statmod(ctx, member: discord.Member = None, amount: int = None):
-    if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if "605456866775924746" in [role.id for role in ctx.message.author.roles] or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         embed = discord.Embed(title=f"What aspect of {member.display_name}'s stats do you wish to change?'", description="React with 📕 to change XP and 📙 to change Sytes and 📗 to toggle booster", color=embcolor)
         wchange = await bot.send_message(ctx.message.channel, embed=embed)
         await bot.add_reaction(wchange, '📕')
