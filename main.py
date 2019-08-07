@@ -11,16 +11,16 @@ from ftplib import FTP
 import json
 #import sqlite3
 import psycopg2
-import heroku3
 import random
 import secrets
 import inspect
 import io
 from datetime import datetime, date, time, timedelta
-from apscheduler.schedulers.blocking import BlockingScheduler
+import pyspeedtest
 from urllib.parse import urlparse
+import pyping
 
-url = os.getenv('DATABASE_URL')
+url = "postgres://url" 
 
 result = urlparse(url)
 username = result.username
@@ -42,6 +42,16 @@ c.execute("""CREATE TABLE IF NOT EXISTS Users(
 c.execute("""CREATE TABLE IF NOT EXISTS Ecopp(
                       UserID BIGSERIAL,
                       Boost BOOLEAN)""")
+
+c.execute("""CREATE TABLE IF NOT EXISTS Activity(
+                      UserID BIGSERIAL,
+                      GlobalMessages INTEGER,
+                      GlobalRank INTEGER,
+                      WeeklyMessages INTEGER,
+                      WeeklyRank INTEGER)""")
+
+c.execute("""CREATE TABLE IF NOT EXISTS Tickets(
+                      Number INTEGER)""")
 
 # c.execute("""CREATE TABLE IF NOT EXISTS Tickets(
 #                       Open INTEGER,
@@ -72,7 +82,7 @@ async def loop():
         await asyncio.sleep(15)
         await bot.change_presence(game=discord.Game(name="with the fate of the world"), status='idle')
         await asyncio.sleep(15)
-        await bot.change_presence(game=discord.Game(name="with free hosting"), status='idle')
+        await bot.change_presence(game=discord.Game(name="with hosting"), status='idle')
         await asyncio.sleep(15)
         await bot.change_presence(game=discord.Game(name="Minecraft"), status='idle')
         await asyncio.sleep(15)
@@ -96,7 +106,7 @@ async def specs(ctx):
     embed.add_field(name = "CPUs", value = "Free: Core i7s (Extreme Edition)\n Premium:  Xeon E5 v4s", inline = False)
     embed.add_field(name = "RAM", value= "Free:  Unlimited. We have a flexible licensing agreement with our host so RAM is automatically upgraded if there's not enough.", inline = False)
     embed.add_field(name = "Storage", value= "All Tiers:  NVMe M.2 SSDs", inline = False)
-    await bot.say(embed=embed)
+    await bot.say("Currently Being Updated")
 
 
 
@@ -255,31 +265,6 @@ async def sql(ctx, cmd: str = None):
         await bot.say(":x: No, Just no")
 
 @bot.command(pass_context=True)
-async def raffle(ctx, *, amount: int = None):
-    if "550955275054743562" in [role.id for role in ctx.message.author.roles]:
-        re = []
-        #ongoingraffle = True
-        embed = discord.Embed(title="A raffle has started!", description=f"A raffle for {amount} sytes has started, type in `s!enter` for a chance to win! (Raffle ends in 5 minutes!)", color=embcolor)
-        await bot.send_message(bot.get_channel('551068777995960361'), embed=embed)
-        await asyncio.sleep(300)
-        winner = random.choice(re)
-        print(f"Winner for raffle is {winner} @ {datetime.utcnow()}")
-        await bot.send_message(bot.get_channel('551068777995960361'), f"<@{winner}> Has won the raffle! Congratulations!")
-        add_tk(winner, amount)
-        re = []
-    else:
-        await bot.say("{} :x: You are not allowed to use this command!".format(ctx.message.author.mention))
-
-
-@bot.command(pass_context=True)
-async def enter(ctx):
-    if ctx.message.author.id in re:
-        await bot.say(":x: You have already joined the raffle!")
-    else:
-        re.append(ctx.message.author.id)
-        await bot.say("Joined Raffle! Good Luck!")
-
-@bot.command(pass_context=True)
 async def serverinfo(ctx):
     server = ctx.message.server
     owner = server.owner
@@ -295,6 +280,48 @@ async def serverinfo(ctx):
     embed.set_thumbnail(url=server.icon_url)
     await bot.say(embed=embed)
 
+
+
+
+@bot.command(pass_context=True)
+async def rulessetup(ctx):
+    if ctx.message.author.id == '232888536574066688':
+        #embedme.add_field(na="", value="")
+        lowsev = discord.Embed(color =0x00FF00, title = "Low Severity [Warn]")
+        lowsev.add_field(name="Use english in all channels unless stated otherwise.", value="Makes it easier for staff to moderate chat.", inline=False)
+        lowsev.add_field(name="Don't be annoying.", value="Includes minimoding and treating other users/staff unniceley.", inline=False)
+        lowsev.add_field(name="Don't undo what a staff member has done.", value="Name changes, etc.", inline=False)
+        lowsev.add_field(name="False/ Spam pings.", value="Like ghost pinging, pinging staff for your message, etc.", inline=False)
+        lowsev.add_field(name="Spamming of any sort.", value="Includes Character Spam, Flooding Chat, Emoji Spam, Reaction Spam and ASCII text.", inline=False)
+        lowsev.add_field(name="Attempting to name hoist.", value="Adding `!` or another character to make your name at the top of the list.", inline=False)
+        medsev = discord.Embed(color =0xffa500, title = "Medium Severity [Kick and or Ban]")
+        medsev.add_field(name="Advertising of any sort.", value="Servers (Inc DM), Products, etc.", inline=False)
+        medsev.add_field(name="Selfbotting.", value="Its against the TOS don't do it.", inline=False)
+        medsev.add_field(name="Sharing of illegal or false information.", value="Untrue Rumors, etc.", inline=False)
+        medsev.add_field(name="Being offensive to staff.", value="Saltyness, Offensive memes, etc.", inline=False)
+        maxserv = discord.Embed(color =0xff0000, title = "High serverity [Permanent Ban]")
+        maxserv.add_field(name="Sending NSFW.", value="Porn, Hentai, etc.", inline=False)
+        maxserv.add_field(name="Alts.", value="We don't know what you do with them.", inline=False)
+        maxserv.add_field(name="DDos/Dox/Death Threats.", value="Its uneeded and wrong.", inline=False)
+        maxserv.add_field(name="Sending files or programs that can damage another user's device.", value="Viruses, Trojans, Adware, etc.", inline=False)
+        maxserv.add_field(name="Raiding.", value="Ban and report to discord's trust and saftey team.", inline=False)
+        maxserv.add_field(name="Racism, Homofobia.", value="We **must** respect everyone independent of race, sexuality or country of residance.", inline=False)
+        await bot.say(embed=lowsev)
+        await bot.say(embed=medsev)
+        await bot.say(embed=maxserv)
+    else:
+        await bot.say("no. just no")
+
+
+@bot.command(pass_context=True)
+async def weekly_reset(ctx):
+    if "605456866775924746" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+        for x in ctx.message.server.members:
+            uid = x.id
+            reset_weeklymessages(uid)
+            print(f"[Activity] Reset weekly for {uid}")
+    else:
+        await bot.say("{} :x: You are not allowed to use this command!".format(ctx.message.author.mention))
 
 @bot.command(pass_context=True)
 async def uptime(ctx):
@@ -320,7 +347,7 @@ async def pfp(ctx, member: discord.Member):
 
 @bot.command(pass_context=True)
 async def purge(ctx, number):
-    if "550955275054743562" in [role.id for role in ctx.message.author.roles]:
+    if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         ongoingpurge = True
         msgs = []
         number = int(number)
@@ -335,9 +362,52 @@ async def purge(ctx, number):
     else:
         await bot.say("{} :x: You are not allowed to use this command!".format(ctx.message.author.mention))
 
+
+        # @bot.command(pass_context=True)
+        # async def eme(ctx):
+        #     if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+        #         for channel in ctx.message.server.channels:
+        #                 staff = discord.utils.get(ctx.message.author.server.roles, name="🔨 Staff")
+        #                 verified = discord.utils.get(ctx.message.author.server.roles, name="👥 Verified")
+        #                 everyone = ctx.message.author.server.default_role
+        #                 #everyone = discord.utils.get(user.server.roles, name="everyone")
+        #                 disallow = discord.PermissionOverwrite()
+        #                 disallow.read_messages = False
+        #                 disallow.send_messages = False
+        #                 allow = discord.PermissionOverwrite()
+        #                 allow.read_messages = True
+        #                 allow.send_messages = True
+        #                 await bot.edit_channel_permissions(channel, verified, disallow)
+        #                 await bot.edit_channel_permissions(channel, everyone, dissallow)
+        #                 #await bot.edit_channel_permissions(channel, everyone, disallow)
+        #                 await bot.edit_channel_permissions(channel, staff, allow)
+        #     else:
+        #         pass
+
+        # @bot.command(pass_context=True)
+        # async def unlock(ctx):
+        #     if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+        #         staff = discord.utils.get(ctx.message.author.server.roles, name="🔨 Staff")
+        #         verified = discord.utils.get(ctx.message.author.server.roles, name="👥 Verified")
+        #         everyone = ctx.message.author.server.default_role
+        #         #everyone = discord.utils.get(user.server.roles, name="everyone")
+        #         disallow = discord.PermissionOverwrite()
+        #         disallow.read_messages = False
+        #         disallow.send_messages = False
+        #         allow = discord.PermissionOverwrite()
+        #         allow.read_messages = True
+        #         allow.send_messages = True
+        #         await bot.edit_channel_permissions(channel, verified, disallow)
+        #         await bot.edit_channel_permissions(channel, everyone, dissallow)
+        #         #await bot.edit_channel_permissions(channel, everyone, disallow)
+        #         await bot.edit_channel_permissions(channel, staff, allow)
+        #     else:
+        #         pass
+
+
 @bot.command(pass_context=True)
 async def checkuser(ctx, user: discord.Member=None):
-    if "550955275054743562" in [role.id for role in ctx.message.author.roles]:
+    if "605456866775924746" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         if user is None:
             user = ctx.message.author
         accage = datetime.utcnow() - user.created_at
@@ -358,29 +428,6 @@ async def checkuser(ctx, user: discord.Member=None):
     else:
         await bot.say("{} :x: You are not allowed to use this command!".format(ctx.message.author.mention))
 
-
-@bot.command(pass_context=True)
-async def setupcurrency(ctx):
-    if "550955275054743562" in [role.id for role in ctx.message.author.roles]:
-        await bot.delete_message(ctx.message)
-        #intro = discord.Embed(title = "Introducing Sytes - Our New Virtual Currency", description = "Our new virutal currency is a way to reward community interaction and activity - a thing that we value here at sytespace.", color=0x363942)
-        wsytes = discord.Embed(title = "What are Sytes?", description = "Sytes (referred to by the bot as $) are our virtual currency which work alongside our shop, allowing the purchase of SyteSpace upgrades (soon).", color=0x363942)
-        wxp = discord.Embed(title = "What is XP?", description = "XP (experience) is an easy to earn currency which you can gain from chatting. If you gather enough XP you can level up and gain perks (custom roles, Sytes, etc.)", color=0x363942)
-        ransacking = discord.Embed(title = "What is ransacking?", description = "You can attempt to rob other users of Sytes by ransacking them. If you fail in your attempt, you will be fined the amount of Sytes you were attempting to ransack. If not - congratulations! You're richer!", color=0x363942)
-        hgain = discord.Embed(title = "How can I gain XP and Sytes?", description = "XP is gathered by chatting, but be warned, you will be muted if you spam in an attempt to overflow your bank account. You can also gain Sytes by interacting with the community, however the drop rate is lower. Other ways of gaining Sytes include raffles, ransacking and staff rewards.", color=0x363942)
-        levels = discord.Embed(title = "XP for each level", description = "You level up 10 000 in 10 000 XP with 10 000 being level 1, 20 000 being level 2, etc", color=0x363942)
-        gstarted = discord.Embed(title = "Ready?", description = "Get started by typing s!profile in <#551461172692385823> - this will create your profile and allow you to start gaining XP and Sytes.", color=0x363942)
-        hfun = discord.Embed(title = "Have fun!", description="If you're have any queries, feel free to open a ticket or speak to a member of staff. We're always here to help.", color=0x363942)
-        #await bot.say(embed=intro)
-        await bot.say(embed=wsytes)
-        await bot.say(embed=wxp)
-        await bot.say(embed=ransacking)
-        await bot.say(embed=hgain)
-        await bot.say(embed=levels)
-        await bot.say(embed=gstarted)
-        await bot.say(embed=hfun)
-    else:
-        pass
 
 @bot.command(pass_context=True)
 async def genpw(ctx):
@@ -404,8 +451,8 @@ async def shop(ctx):
     tk = get_tk(ctx.message.author.id)
     embed.add_field(name="**`1.` One Week Of SyteSpace premium** - 200$", value="This is the best way to try out our services full abilities.", inline=False)
     embed.add_field(name="**`2.` Custom Role for one week** - 150$", value="Show your freinds how cool you are with your very own elevated custom role.", inline=False)
-    embed.add_field(name="**`3.` Easter Bunny Role** - 10$", value="Easter event role, limited time only", inline=False)
-    embed.add_field(name="**`4.` Syte Booster (Permanent)** - ~~400$~~ 200$", value="This makes your chances of gaining sytes 50/50 (per message) and you also gain up to 5 sytes per message.", inline=False)
+    embed.add_field(name="**`3.` Long Live Summer Role** - 100$", value="Summer event role, limited time only", inline=False)
+    embed.add_field(name="**`4.` Syte Booster (Permanent)** - 400$", value="This makes your chances of gaining sytes 50/50 (per message) and you also gain up to 5 sytes per message.", inline=False)
     embed.set_footer(text=f"You currently have {tk} Sytes", icon_url="https://assets.syte.space/assets/sytespace_bg.jpg")
     await bot.say(embed=embed)
 
@@ -437,14 +484,14 @@ async def buy(ctx, itemnumber: int = None):
             await bot.say(":x: Item is not avalible yet.")
         elif itemnumber == 3:
             tk = int(get_tk(ctx.message.author.id))
-            itemprice = 10
-            itemname = "Easter Bunny Role"
+            itemprice = 100
+            itemname = "Long Live Summer Role"
             if tk < itemprice:
                 await bot.say(f":x: You don't have sufficent funds to buy that item (You are missing `{itemprice - tk}` Sytes)")
             else:
                 await bot.delete_message(ctx.message)
                 newtk = remove_tk(ctx.message.author.id, itemprice)
-                ecowarrior = discord.utils.get(ctx.message.server.roles, name="🐰 Easter Bunny")
+                ecowarrior = discord.utils.get(ctx.message.server.roles, name="🍉 Long Live Summer")
                 await bot.add_roles(ctx.message.author, ecowarrior)
                 embed = discord.Embed(title = "Purchase Confirmed", description=f"Your purchase of {itemname} has been confirmed, you now have {newtk} Sytes, the role has now been added to you")
                 stafflog = discord.Embed(title = "A new store purchase has been made.")
@@ -480,7 +527,7 @@ async def buy(ctx, itemnumber: int = None):
 
 @bot.command(pass_context=True)
 async def punish(ctx, member: discord.Member = None, *, reason: str = None):
-    if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
+    if "605456866775924746" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         if reason == None:
             await bot.say(":x: Please Specify A Reason")
         elif member == None:
@@ -555,18 +602,35 @@ async def punish(ctx, member: discord.Member = None, *, reason: str = None):
 
 @bot.command(pass_context=True)
 async def ping(ctx):
+    st = pyspeedtest.SpeedTest()
+    google_req = pyping.ping('8.8.8.8')
+    cloudflare_req = pyping.ping('1.1.1.1')  
+    discord_req = pyping.ping('gateway.discord.gg')
+    google = str(google_req.avg_rtt)
+    cloudflare = str(cloudflare_req.avg_rtt)
+    discord_ping = str(discord_req.avg_rtt)
+    ping = str(int(round(st.ping(), 0)))
+    down = round((st.download()/1000000), 2)
+    up = round((st.upload()/1000000), 2)
+    host = str(st.host)
     now = datetime.utcnow()
     old_message = now - ctx.message.timestamp
     old_delta = old_message.microseconds
     milsec_old = int(old_delta // 1000)
-    embed = discord.Embed(title=":heart: Ping!", description=f"{milsec_old}ms", color=0x363942)
+    embed = discord.Embed(title="Connection Statistics", description="Current Connection Statistics", color=0x363942)
+    embed.add_field(name="Ping (st)", value="`%sms`" % ping, inline=False)
+    embed.add_field(name="Ping (disc)", value="`%sms`" % discord_ping, inline=False)
+    embed.add_field(name="Server Used", value="`%s`" % host, inline=False)
+    embed.add_field(name="Download", value="`%s mbps`" % down, inline=False)
+    embed.add_field(name="Upload", value="`%s mbps`" % up, inline=False)
     embed.set_footer(text=f"Requested by: {ctx.message.author.display_name}", icon_url=ctx.message.author.avatar_url)
+    emb = discord.Embed(title="Connection Statistics [2]", description="Statistics to pings for other services", color=0x363942)
+    emb.add_field(name="Google", value="`%sms`" % google, inline=False)
+    emb.add_field(name="Cloudflare", value="`%sms`" % cloudflare, inline=False)
+    emb.add_field(name="Discord (time module)", value="`%sms`" % milsec_old, inline=False)
+    emb.set_footer(text=f"Requested by: {ctx.message.author.display_name}", icon_url=ctx.message.author.avatar_url)
     await bot.say(embed=embed)
-
-@bot.command(pass_context=True)
-async def tos(ctx):
-    embed = discord.Embed(title = ":shield: Bot Terms Of Service", description = "You can consult our bot's terms of service @ https://assets.syte.space/tos.html", color=0x363942)
-    await bot.say(embed=embed)
+    await bot.say(embed=emb)
 
 @bot.command(pass_context=True)
 async def new(ctx, subject=""):
@@ -577,7 +641,8 @@ async def new(ctx, subject=""):
     embed = discord.Embed(title = f"New ticket created, Regarding {subject}", description = f"Hello {ctx.message.author.display_name}, thanks for reaching out to our support team, a member of staff will be with you as soon as possible.", color=0x363942)
     embed.set_footer(text=f"Ticket number: {createchannel.id}", icon_url=ctx.message.author.avatar_url)
     staff = discord.utils.get(ctx.message.author.server.roles, name="🔨 Staff")
-    verified = discord.utils.get(ctx.message.author.server.roles, name="👥 Verified")
+    guest = discord.utils.get(ctx.message.author.server.roles, name="👤 Guest")
+    client = discord.utils.get(ctx.message.author.server.roles, name="❤ Client")
     everyone = ctx.message.author.server.default_role
     #everyone = discord.utils.get(user.server.roles, name="everyone")
     disallow = discord.PermissionOverwrite()
@@ -586,8 +651,9 @@ async def new(ctx, subject=""):
     allow = discord.PermissionOverwrite()
     allow.read_messages = True
     allow.send_messages = True
-    await bot.edit_channel_permissions(createchannel, verified, disallow)
+    await bot.edit_channel_permissions(createchannel, guest, disallow)
     await bot.edit_channel_permissions(createchannel, everyone, disallow)
+    await bot.edit_channel_permissions(createchannel, client, disallow)
     #await bot.edit_channel_permissions(createchannel, everyone, disallow)
     await bot.edit_channel_permissions(createchannel, ctx.message.author, allow)
     await bot.edit_channel_permissions(createchannel, staff, allow)
@@ -600,13 +666,13 @@ async def skin(ctx, username = ""):
         data = uid.json()
         uid = f"{data['id']} "
         embed = discord.Embed(color=0x363942)
-        embed.set_image(url=f"https://crafatar.com/renders/body/{uid}")
+        embed.set_image(url=f"https://crafatar.com/renders/body/{uid}.png")
         await bot.say(embed=embed)
 
 
 @bot.command(pass_context=True)
 async def setup(ctx):
-    if "550955275054743562" in [role.id for role in ctx.message.author.roles]:
+    if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         print("Here!")
         #print("Set up!")
         msgs = []
@@ -630,8 +696,18 @@ async def reboot(ctx):
     await bot.logout()
 
 @bot.command(pass_context=True)
+async def weekly(ctx):
+    first = f"<@{get_user_rank(1)}>"
+    second = f"<@{get_user_rank(2)}>"
+    third = f"<@{get_user_rank(3)}>"
+    fourth = f"<@{get_user_rank(4)}>"
+    fifth = f"<@{get_user_rank(5)}>"
+    embed = discord.Embed(title="Weekly Leaderboard", description=f"#1 - {first}\n#2 - {second}\n#3 - {third}\n#4 - {fourth}\n#5 - {fifth}", color=0x363942)
+    await bot.say(embed=embed)
+
+@bot.command(pass_context=True)
 async def addguest(ctx):
-    if "550955275054743562" in [role.id for role in ctx.message.author.roles]:
+    if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         ecowarrior = discord.utils.get(ctx.message.server.roles, name="👋 Guest")
         for member in ctx.message.server.members:
             await bot.add_roles(member, ecowarrior)
@@ -641,7 +717,7 @@ async def addguest(ctx):
 
 @bot.command(pass_context=True)
 async def statmod(ctx, member: discord.Member = None, amount: int = None):
-    if "550955275054743562" in [role.id for role in ctx.message.author.roles]:
+    if "550955275054743562" or "566249728732561410" in [role.id for role in ctx.message.author.roles]:
         embed = discord.Embed(title=f"What aspect of {member.display_name}'s stats do you wish to change?'", description="React with 📕 to change XP and 📙 to change Sytes and 📗 to toggle booster", color=embcolor)
         wchange = await bot.send_message(ctx.message.channel, embed=embed)
         await bot.add_reaction(wchange, '📕')
@@ -712,7 +788,8 @@ async def close(ctx):
     if confirm.user == bot.user:
         pass
     #await bot.remove_reaction(confirmmsg, '❌', ctx.message.author)
-    await bot.delete_channel(ctx.message.channel)
+    else:
+        await bot.delete_channel(ctx.message.channel)
 
 #@bot.command(pass_context=True)
 #async def hello(ctx):
@@ -721,316 +798,17 @@ async def close(ctx):
     #embed.set_thumbnail(url="https://assets.syte.space/assets/sytespace_bg.jpg")
     #await bot.say(embed=embed)
 
+
 @bot.event
-async def on_reaction_add(reaction, user):
-    if reaction.emoji == '👊':
-        if user == bot.user:
-            pass
-        else:
-            numb = randint(1, 100)
-            createchannel = await bot.create_channel(user.server, f"ticket-{numb}")
-            embed = discord.Embed(title = "New ticket created!", description = f"Hey there, {user.display_name}. Thanks for your interest in SyteSpace. If you're interested in ordering your free Minecraft server, please react to this message with 🎮. Otherwise, react with 💬 and a staff member will get back to you as soon as possible. To order premium please react with 💰 and a staff member will be with you as soon as possible to assist with the purchase\n\n Thanks!", color=0x363942)
-            embed.set_footer(text=f"Ticket number: {createchannel.id}", icon_url=user.avatar_url)
-            staff = discord.utils.get(user.server.roles, name="🔨 Staff")
-            verified = discord.utils.get(user.server.roles, name="👥 Verified")
-            everyone = user.server.default_role
-            #everyone = discord.utils.get(user.server.roles, name="everyone")
-            disallow = discord.PermissionOverwrite()
-            disallow.read_messages = False
-            disallow.send_messages = False
-            allow = discord.PermissionOverwrite()
-            allow.read_messages = True
-            allow.send_messages = True
-            await bot.edit_channel_permissions(createchannel, verified, disallow)
-            await bot.edit_channel_permissions(createchannel, everyone, disallow)
-            #await bot.edit_channel_permissions(createchannel, everyone, disallow)
-            await bot.edit_channel_permissions(createchannel, user, allow)
-            await bot.edit_channel_permissions(createchannel, staff, allow)
-            msg = await bot.send_message(createchannel, embed=embed)
-            message = reaction.message
-            await bot.remove_reaction(message, '👊', user)
-            await bot.add_reaction(msg, '🎮')
-            await bot.add_reaction(msg, '💬')
-            await bot.add_reaction(msg, '💰')
-            while bot_on == True:
-                res = await bot.wait_for_reaction(['🎮', '💬', '💰'], message=msg)
-                if res.user == bot.user:
-                    pass
-                else:
-                    if res.reaction.emoji == '💰':
-                        ghost = await bot.send_message(createchannel, "<@&550955275054743562>")
-                        asyncio.sleep(2)
-                        await bot.delete_message(ghost)
-                        embed = discord.Embed(title="premium", description="Thanks for you interest in our premium service a staff member will be with you ASAP to assist you with the purchase and/or any questions you may have", color=embcolor)
-                        await bot.edit_channel(createchannel, name=f"premium-req")
-                        await bot.send_message(createchannel, embed=embed)
-                    if res.reaction.emoji == '💬':
-                        ghost = await bot.send_message(createchannel, "<@&550955275054743562>")
-                        asyncio.sleep(2)
-                        await bot.delete_message(ghost)
-                        await bot.send_message(createchannel, f"A staff member will be here shortly.")
-                    if res.reaction.emoji == '🎮':
-                        #embed = discord.Embed(title = "", description = "", color=0x363942)
-                        embed = discord.Embed(title = "Server creation process started.", description = " The bot will ask you some questions throughout the process. Please respond by reacting to the message with the respective icon, or typing in what is asked.\n\n Thanks again!", color=0x363942)
-                        embed.set_footer(text=f"Ticket number: {createchannel.id}", icon_url=res.user.avatar_url)
-                        await bot.send_message(createchannel, embed=embed)
-                        emb = discord.Embed(title = "Do you already have an account with us?", description = "Please react with either 👍 or 👎.", color=0x363942)
-                        accountreq = await bot.send_message(createchannel, embed=emb)
-                        await bot.add_reaction(accountreq, '👍')
-                        await bot.add_reaction(accountreq, '👎')
-                        while bot_on == True:
-                            accountreqres = await bot.wait_for_reaction(['👍', '👎'], message=accountreq)
-                            if accountreqres.user == bot.user:
-                                    pass
-                            else:
-                                if accountreqres.reaction.emoji == '👍':
-                                    email = ""
-                                    servername = ""
-                                    while email == "":
-                                        embed = discord.Embed(title = "Login information", description = "Thanks for sticking with us!", color=0x363942)
-                                        embed.add_field(name="Could I ask you for a email?", value="Type in your email below.")
-                                        await bot.send_message(createchannel, embed=embed)
-                                        emailres = await bot.wait_for_message(timeout = None, author=accountreqres.user, channel=createchannel, check=None)
-                                        email = emailres.content
-                                        #print(email)
-                                    else:
-                                        while servername == "":
-                                            embed = discord.Embed(title = "Server information", description = f"That's great, {user.display_name}.", color=0x363942)
-                                            embed.add_field(name="What server name would you like?", value="Think of something creative, and original... we recommend something that your players will remember!")
-                                            embed.add_field(name="\u200b", value="Type in your preferred server name below. Keep in mind you can always change this later on.")
-                                            await bot.send_message(createchannel, embed=embed)
-                                            servernameres = await bot.wait_for_message(timeout = None, author=accountreqres.user, channel=createchannel, check=None)
-                                            servername = servernameres.content
-                                            print(servername)
-                                        else:
-                                            embed = discord.Embed(title = "Server information", description = "Sounds awesome!", color=0x363942)
-                                            embed.add_field(name="What server JAR would you like to use?", value="This can always be changed later on, we suggest you use Spigot for servers where you may want to extend the functionality, but maybe just Vanilla if you're setting up a simple server for your friends to play on.")
-                                            embed.add_field(name="\u200b", value="React with 🍦 for Vanilla, 🔗 for BungeeCord, 💧 for Spigot, ⚙ for Forge or 🌟 for Sponge .")
-                                            serverreq = await bot.send_message(createchannel, embed=embed)
-                                            await bot.add_reaction(serverreq, '🍦')
-                                            await bot.add_reaction(serverreq, '🔗')
-                                            await bot.add_reaction(serverreq, '💧')
-                                            await bot.add_reaction(serverreq, '⚙')
-                                            await bot.add_reaction(serverreq, '🌟')
-                                            while bot_on == True:
-                                                server_type = ""
-                                                serverreqres = await bot.wait_for_reaction(['🍦', '🔗', '💧', '⚙', '🌟'], message=serverreq)
-                                                if serverreqres.user == bot.user:
-                                                        pass
-                                                else:
-                                                    if serverreqres.reaction.emoji == '🍦':
-                                                        server_type = "Vanilla"
-                                                    if serverreqres.reaction.emoji == '🔗':
-                                                        server_type = "BungeeCord"
-                                                    if serverreqres.reaction.emoji == '💧':
-                                                        server_type = "Spigot"
-                                                    if serverreqres.reaction.emoji == '⚙':
-                                                        server_type = "Forge"
-                                                    if serverreqres.reaction.emoji == '🌟':
-                                                        server_type = "Sponge"
-                                                    while server_type == "":
-                                                        pass
-                                                    else:
-                                                        cheers = discord.Embed(title = "Server setup ended.", description = f"Thanks for your patience, {user.display_name}. The data you submitted was passed on to our activation team for manual approval. Please allow up to 72 hours for us to review it, we receive extremely large amounts of requests meaning we can sometimes struggle to get things timed to your liking. We'll slide into your DMs and notify you here as soon as it's done with all the information you need.\n\nOnce again, many thanks for bearing us, we appreciate you choosing SyteSpace for your next project.", color=0x363942)
-                                                        embed = discord.Embed(title = "Server setup ended.", description=f"Hey {user.display_name},\n\nThanks for choosing SyteSpace, your details have been passed on to our activation team for manual approval. We'll let you know once it's done.", color=0x363942)
-                                                        embed.add_field(name="Just for your reference, here's a copy of the data you submitted:", value="\a")
-                                                        embed.add_field(name="Email", value=f"{email}", inline=False)
-                                                        embed.add_field(name="Server name", value=f"{servername}", inline=False)
-                                                        embed.add_field(name="Server type", value=f"{server_type}", inline=False)
-                                                        await bot.send_message(createchannel, embed=cheers)
-                                                        await bot.send_message(user, embed=embed)
-                                                        emb = discord.Embed(title = "New ticket completed!", color=0x363942)
-                                                        emb.add_field(name="Type of account", value="Existing Account", inline=False)
-                                                        emb.add_field(name="Ticket ID", value=f"<#{createchannel.id}>", inline=False)
-                                                        emb.add_field(name="Discord name", value=f"{user.display_name}", inline=False)
-                                                        emb.add_field(name="Discord ID", value=f"{user.id}", inline=False)
-                                                        emb.add_field(name="Email", value=f"{email}", inline=False)
-                                                        emb.add_field(name="Server name", value=f"{servername}", inline=False)
-                                                        emb.add_field(name="Server type", value=f"{server_type}", inline=False)
-                                                        emb.set_footer(text="React with ✅ when approved or with ❌ to deny")
-                                                        confirm = await bot.send_message(bot.get_channel('552158725901778964'), embed=emb)
-                                                        await bot.add_reaction(confirm, '✅')
-                                                        await bot.add_reaction(confirm, '❌')
-                                                        while bot_on == True:
-                                                            serverconfirm = await bot.wait_for_reaction(['✅', '❌'], message=confirm)
-                                                            if serverconfirm.user == bot.user:
-                                                                pass
-                                                            else:
-                                                                if serverconfirm.reaction.emoji == '✅':
-                                                                    approved = discord.Embed(title = f"Hey there, {user.display_name}!", description = "I'm glad to say that the SyteSpace server you requested has been approved of. We hope you enjoy your new server, please do let us know if you have any queries.\n\nMany thanks once again for choosing SyteSpace.", color=0x363942)
-                                                                    await bot.send_message(user, embed=approved)
-                                                                    await bot.delete_message(confirm)
-                                                                    ping = await bot.send_message(createchannel, "{}".format(user.mention))
-                                                                    embed = discord.Embed(title="The server you requested has now been activated!", description="Please check your direct messages for more information. This ticket channel will be deleted in 24 hours.", color=0x363942)
-                                                                    await bot.send_message(createchannel, embed=embed)
-                                                                    await bot.edit_channel(createchannel, name=f"completed-{numb}")
-                                                                    asyncio.sleep(2)
-                                                                    await bot.delete_message(ping)
-                                                                    await asyncio.sleep(86400)
-                                                                    await bot.delete_channel(createchannel)
-                                                                if serverconfirm.reaction.emoji == '❌':
-                                                                    denied = discord.Embed(title = f"Hey there, {user.display_name}!", description = f"I'm sorry to inform that the SyteSpace server that you requested has been **denied** this may because of:\n a) You have made a malformed request (Invalid Email, Invalid Username (starts or ends with `_`))\n b) You have filled out the form as a existing user but you don't have a SyteSpace account (@ https://syte.space/)\n c) You have exceeded the one server per user limit (on free accounts)", color=embcolor)
-                                                                    await bot.send_message(user, embed=denied)
-                                                                    embed = discord.Embed(title="The server you requested has been denied!", description="Please check your direct messages for why this request might of been denied. If you have any querys please don't hesitate to tag a member of staff", color=0x363942)
-                                                                    await bot.edit_channel(createchannel, name=f"error-{numb}")
-                                                                    await bot.send_message(createchannel, embed=embed)
-
-                                if accountreqres.reaction.emoji == '👎':
-                                    email = ""
-                                    username = ""
-                                    firstname = ""
-                                    lastname = ""
-                                    servername = ""
-                                    while email == "":
-                                        embed = discord.Embed(title = "Login information", description = "Thanks for sticking with us!", color=0x363942)
-                                        embed.add_field(name="Could I ask you for a email?", value="Type in your email below.")
-                                        await bot.send_message(createchannel, embed=embed)
-                                        emailres = await bot.wait_for_message(timeout = None, author=accountreqres.user, channel=createchannel, check=None)
-                                        email = emailres.content
-                                        #print(email)
-                                    else:
-                                        while firstname == "":
-                                            embed = discord.Embed(title = "Login information", description = "Thanks for that.", color=0x363942)
-                                            embed.add_field(name="What is your First Name?", value="We need to know what to call you, I guess.")
-                                            await bot.send_message(createchannel, embed=embed)
-                                            firstnameres = await bot.wait_for_message(timeout = None, author=accountreqres.user, channel=createchannel, check=None)
-                                            firstname = firstnameres.content
-                                        while lastname == "":
-                                            embed = discord.Embed(title = "Login information", description = "Thanks for that.", color=0x363942)
-                                            embed.add_field(name="What is your Last Name?", value="You can provide an inital if you wish.")
-                                            await bot.send_message(createchannel, embed=embed)
-                                            firstnameres = await bot.wait_for_message(timeout = None, author=accountreqres.user, channel=createchannel, check=None)
-                                            lastname = firstnameres.content
-                                        while username == "":
-                                            embed = discord.Embed(title = "Login information", description = "Great name you've got there.", color=0x363942)
-                                            embed.add_field(name="What would you like your username to be?", value="Type the username you'd like below.")
-                                            await bot.send_message(createchannel, embed=embed)
-                                            usernameres = await bot.wait_for_message(timeout = None, author=accountreqres.user, channel=createchannel, check=None)
-                                            username = usernameres.content
-                                            print(username)
-                                        while servername == "":
-
-                                            embed = discord.Embed(title = "Server information", description = f"That's great, {user.display_name}.", color=0x363942)
-                                            embed.add_field(name="What server name would you like?", value="Think of something creative, and original... we recommend something that your players will remember!")
-                                            embed.add_field(name="\u200b", value="Type in your preferred server name below. Keep in mind you can always change this later on.")
-                                            await bot.send_message(createchannel, embed=embed)
-                                            servernameres = await bot.wait_for_message(timeout = None, author=accountreqres.user, channel=createchannel, check=None)
-                                            servername = servernameres.content
-                                            print(servername)
-                                        else:
-                                            embed = discord.Embed(title = "Server information", description = "Sounds awesome!", color=0x363942)
-                                            embed.add_field(name="What server JAR would you like to use?", value="This can always be changed later on, we suggest you use Spigot for servers where you may want to extend the functionality, but maybe just Vanilla if you're setting up a simple server for your friends to play on.")
-                                            embed.add_field(name="\u200b", value="React with 🍦 for Vanilla, 🔗 for BungeeCord, 💧 for Spigot, ⚙ for Forge or 🌟 for Sponge .")
-                                            serverreq = await bot.send_message(createchannel, embed=embed)
-                                            await bot.add_reaction(serverreq, '🍦')
-                                            await bot.add_reaction(serverreq, '🔗')
-                                            await bot.add_reaction(serverreq, '💧')
-                                            await bot.add_reaction(serverreq, '⚙')
-                                            await bot.add_reaction(serverreq, '🌟')
-                                            while bot_on == True:
-                                                server_type = ""
-                                                serverreqres = await bot.wait_for_reaction(['🍦', '🔗', '💧', '⚙', '🌟'], message=serverreq)
-                                                if serverreqres.user == bot.user:
-                                                        pass
-                                                else:
-                                                    if serverreqres.reaction.emoji == '🍦':
-                                                        server_type = "Vanilla"
-                                                    if serverreqres.reaction.emoji == '🔗':
-                                                        server_type = "BungeeCord"
-                                                    if serverreqres.reaction.emoji == '💧':
-                                                        server_type = "Spigot"
-                                                    if serverreqres.reaction.emoji == '⚙':
-                                                        server_type = "Forge"
-                                                    if serverreqres.reaction.emoji == '🌟':
-                                                        server_type = "Sponge"
-                                                    while server_type == "":
-                                                        pass
-                                                    else:
-                                                        password = createnewuser(username, email, firstname, lastname)
-                                                        cheers = discord.Embed(title = "Server setup ended.", description = f"Thanks for your patience, {user.display_name}. The data you submitted was passed on to our activation team for manual approval. Please allow up to 72 hours for us to review it, we receive extremely large amounts of requests meaning we can sometimes struggle to get things timed to your liking. We'll slide into your DMs and notify you here as soon as it's done with all the information you need.\n\nOnce again, many thanks for bearing us, we appreciate you choosing SyteSpace for your next project.", color=0x363942)
-                                                        embed = discord.Embed(title = "Server setup ended.", description=f"Hey {user.display_name},\n\nThanks for choosing SyteSpace, your details have been passed on to our activation team for manual approval. We'll let you know once it's done.", color=0x363942)
-                                                        embed.add_field(name="Server name", value=f"{servername}")
-                                                        embed.add_field(name="Server type", value=f"{server_type}")
-                                                        embed.set_footer(text="If any data is wrong please message the staff team!")
-                                                        await bot.send_message(createchannel, embed=cheers)
-                                                        await bot.send_message(user, embed=embed)
-                                                        emb = discord.Embed(title = "Someone's requested a server.", color=0x363942)
-                                                        emb.add_field(name="Type of account", value="New account")
-                                                        emb.add_field(name="Discord name", value=f"{user.display_name}")
-                                                        emb.add_field(name="Discord ID", value=f"{user.id}")
-                                                        emb.add_field(name="Ticket ID", value=f"<#{createchannel.id}>", inline=False)
-                                                        emb.add_field(name="Email", value=f"{email}")
-                                                        emb.add_field(name="Server name", value=f"{servername}")
-                                                        emb.add_field(name="Server type", value=f"{server_type}")
-                                                        emb.set_footer(text="React with ✅ when approved or with ❌ to deny it")
-                                                        confirm = await bot.send_message(bot.get_channel('552158725901778964'), embed=emb)
-                                                        await bot.add_reaction(confirm, '✅')
-                                                        await bot.add_reaction(confirm, '❌')
-                                                        while bot_on == True:
-                                                            serverconfirm = await bot.wait_for_reaction(['✅', '❌'], message=confirm)
-                                                            if serverconfirm.user == bot.user:
-                                                                pass
-                                                            else:
-                                                                if serverconfirm.reaction.emoji == '✅':
-                                                                    approved = discord.Embed(title = f"Hey there, {user.display_name}!", description = f"I'm glad to say that the SyteSpace server you requested has been approved of. You can login with your provided email (`{email}`) and the password `{password}` at https://syte.space/ . You can change your password under the `My Account` section of the panel.\n\nMany thanks once again for choosing SyteSpace.", color=0x363942)
-                                                                    await bot.send_message(user, embed=approved)
-                                                                    verified = discord.utils.get(user.server.roles, name="👥 Verified")
-                                                                    await bot.add_roles(user, verified)
-                                                                    await bot.delete_message(confirm)
-                                                                    ping = await bot.send_message(createchannel, "{}".format(user.mention))
-                                                                    embed = discord.Embed(title="The server you requested has now been activated!", description="Please check your direct messages for more information. This ticket channel will be deleted in 24 hours.", color=0x363942)
-                                                                    await bot.edit_channel(createchannel, name=f"completed-{numb}")
-                                                                    await bot.send_message(createchannel, embed=embed)
-                                                                    asyncio.sleep(2)
-                                                                    await bot.delete_message(ping)
-                                                                    await asyncio.sleep(86400)
-                                                                    await bot.delete_channel(createchannel)
-                                                                if serverconfirm.reaction.emoji == '❌':
-                                                                    denied = discord.Embed(title = f"Hey there, {user.display_name}!", description = f"I'm sorry to inform that the SyteSpace server that you requested has been **denied** this may because of:\n a) You have made a malformed request (Invalid Email, Invalid Username (starts or ends with `_`))\n b) You have filled out the form as a existing user but you don't have a SyteSpace account (@ https://syte.space/)\n c) You have exceeded the one server per user limit (on free accounts)", color=embcolor)
-                                                                    await bot.send_message(user, embed=denied)
-                                                                    embed = discord.Embed(title="The server you requested has been denied!", description="Please check your direct messages for why this request might of been denied. If you have any querys please don't hesitate to tag a member of staff", color=0x363942)
-                                                                    await bot.edit_channel(createchannel, name=f"error-{numb}")
-                                                                    await bot.send_message(createchannel, embed=embed)
-
-
-
-
-
-
-#@bot.event
-#async def on_command_error(ctx, error):
-    #if isinstance(ctx, discord.ext.commands.errors.CommandNotFound):
-        #await bot.add_reaction(error.message, '❌')
-    #else:
-        #raise ctx
+async def on_command_error(ctx, error):
+    if isinstance(ctx, discord.ext.commands.errors.CommandNotFound):
+        await bot.add_reaction(error.message, '❌')
+    else:
+        await bot.add_reaction(error.message, '🔎')
+        raise ctx
 
 
 #db.commit()
-
-
-def createnewuser(input_username: str = None, input_email: str = None, first_name: str = None, last_name: str = None):
-    username = input_username.replace(' ', '_').lower()
-    email = input_email.lower()
-    password = secrets.token_hex(5)
-    token = os.getenv('APITK')
-    if last_name == None:
-        last_name = "User"
-    else:
-        data = {'username':f'{username}',
-                'email':f'{email}',
-                'first_name':f'{first_name}',
-                'last_name':f'{last_name}',
-                'password': f'{password}'}
-
-        headers = {"Authorization":f"Bearer {token}",
-                "Content-Type":"application/json",
-                "Accept":"Application/vnd.pterodactyl.v1+json"}
-
-        response = requests.post("https://syte.space/api/application/users", headers=headers, json=data).json()
-        print(response)
-        return password
-
-
 def checklevelup(uid: str):
     currentlvl = get_lvl(uid)
     currentxp = get_xp(uid)
@@ -1059,6 +837,14 @@ def create_economypp(user_id: str):
     if verif < 1:
         print("[Economy++] Creating user with id " + str(user_id))
         c.execute("INSERT INTO Ecopp VALUES (%s, %s)", (str(user_id), False))
+        db.commit()
+
+def create_activity(user_id: str):
+    c.execute("SELECT COUNT(*) FROM Activity WHERE UserID=%s", (str(user_id),))
+    verif = c.fetchone()[0]
+    if verif < 1:
+        print("[Activity] Creating user with id " + str(user_id))
+        c.execute("INSERT INTO Activity VALUES (%s, %s, %s, %s, %s)", (str(user_id), 0, 0, 0, 0))
         db.commit()
 
 def set_lvl(user_id, amount: int):
@@ -1134,6 +920,46 @@ def set_tk(user_id, amount: int):
     db.commit()
     return tk
 
+def get_globalmessages(user_id: str):
+    create_activity(user_id)
+    c.execute("SELECT GlobalMessages FROM Activity WHERE UserID=%s", (str(user_id),))
+    user_globalmessages = int(c.fetchone()[0])
+    db.commit()
+    return user_globalmessages
+
+def get_weeklymessages(user_id: str):
+    create_activity(user_id)
+    c.execute("SELECT WeeklyMessages FROM Activity WHERE UserID=%s", (str(user_id),))
+    user_weeklymessages = int(c.fetchone()[0])
+    db.commit()
+    return user_weeklymessages
+
+def reset_weeklymessages(user_id: str):
+    create_activity(user_id)
+    c.execute("UPDATE Activity SET WeeklyMessages=%s WHERE UserID=%s", (0, str(user_id)))
+    db.commit()
+    return True
+
+def set_weekly_rank(user_id, rank: int):
+    c.execute("UPDATE Activity SET WeeklyRank=%s WHERE UserID=%s", (rank, str(user_id)))
+    db.commit()
+    return rank
+
+def get_user_rank(input_rank: int):
+    c.execute("SELECT UserID FROM Activity WHERE WeeklyRank=%s", (int(input_rank),))
+    rank = int(c.fetchone()[0])
+    db.commit()
+    return rank
+
+def add_messages(user_id: str):
+    create_activity(user_id)
+    globalmsg = int(get_globalmessages(user_id) + 1)
+    weeklymsg = int(get_weeklymessages(user_id) + 1)
+    c.execute("UPDATE Activity SET GlobalMessages=%s WHERE UserID=%s", (int(globalmsg), str(user_id)))
+    c.execute("UPDATE Activity SET WeeklyMessages=%s WHERE UserID=%s", (int(weeklymsg), str(user_id)))
+    db.commit()
+    return globalmsg + weeklymsg
+
 def isrisk(creation_date):
     inputacc = datetime.utcnow() - creation_date
     accagedays = int(inputacc.days)
@@ -1190,6 +1016,31 @@ async def createraffle():
     re = []
 
 
+async def update_leaderboards():
+    while 1:
+        ids = []
+        weeklead = {}
+        globallead = {}
+        weekfinal = []
+        globalfinal = []
+        c.execute("SELECT UserID FROM Activity")
+        records = c.fetchall()
+        for x in records:
+            ids.append(str(x[0]))
+        for x in ids:
+            weekly = get_weeklymessages(x)
+            global_msg = get_globalmessages(x)
+            weeklead[weekly] = x
+            globallead[weekly] = x
+        week_sort = sorted(weeklead.items(),reverse=True)
+        maximum= len(ids)
+        until = range(1, maximum + 1)
+        for x, y in zip(week_sort, until):
+            check = set_weekly_rank(x[1], y)
+        print("Updated Leaderboards")
+        await asyncio.sleep(120)
+
+
 async def spamcheck():
     while 1:
         spam = dict(spams)
@@ -1219,7 +1070,7 @@ async def on_member_join(member: discord.Member):
     if risky == True:
         #Ashtetic
         create_user_if_not_exists(member.id)
-        ecowarrior = discord.utils.get(member.server.roles, name="👋 Guest")
+        ecowarrior = discord.utils.get(member.server.roles, name="👥 Guest")
         await bot.add_roles(member, ecowarrior)
         embed = discord.Embed(title = f"Welcome to the syte.space discord server, {member.display_name}!", description = "If you wish to aquire a Minecraft server please check out <#550958398410194974> and open a ticket by doing `s!new`", color=0x363942)
         embed.set_footer(text=f"We now have {member.server.member_count} members")
@@ -1238,7 +1089,7 @@ async def on_member_join(member: discord.Member):
         await bot.send_message(bot.get_channel('565201713951145994'), embed=sec)#log
     elif risky == False:
         create_user_if_not_exists(member.id)
-        ecowarrior = discord.utils.get(member.server.roles, name="👋 Guest")
+        ecowarrior = discord.utils.get(member.server.roles, name="👥 Guest")
         await bot.add_roles(member, ecowarrior)
         embed = discord.Embed(title = f"Welcome to the syte.space discord server, {member.display_name}!", description = "If you wish to aquire a Minecraft server please check out <#550958398410194974> and open a ticket by doing `s!new`", color=0x363942)
         embed.set_footer(text=f"We now have {member.server.member_count} members")
@@ -1313,6 +1164,8 @@ async def on_member_remove(member: discord.Member):
 @bot.event
 async def on_message(message):
     create_economypp(message.author.id)
+    create_activity(message.author.id)
+    add_messages(message.author.id)
     boost = getbooster(message.author.id)
     ping = False
     if len(message.raw_mentions) + len(message.raw_role_mentions) > 0:
@@ -1326,10 +1179,6 @@ async def on_message(message):
             spams[message.author.id] = {"pings": [[message, datetime.utcnow()]], "msgs": [[message, datetime.utcnow()]]}
         else:
             spams[message.author.id] = {"pings": [], "msgs": [[message, datetime.utcnow()]]}
-    if_xp = random.choice([True, False])
-    if if_xp is True:
-        add_xp(message.author.id, 1)
-
     #if_tk = random.choice([True, False, False, False, False])
     if boost == True:
         if_tk_boost = secrets.choice([True, False])
@@ -1346,8 +1195,5 @@ async def on_message(message):
             pass
     await bot.process_commands(message)
 
-scheduler = BlockingScheduler()
-scheduler.add_job(createraffle, 'interval', hours=1)
 bot.loop.create_task(spamcheck())
-bot.run(os.getenv('TOKEN'))
-scheduler.start()
+# bot.loop.create_task(update_leaderboards()) 
